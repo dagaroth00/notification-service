@@ -8,8 +8,13 @@ router.post('/', async (req: Request, res: Response) => {
 
   // Save to DB (coming later)
   // Send over WebSocket
+    const io = req.app.get('io');
+
+  if (!io) {
+    return res.status(500).json({ error: 'WebSocket server not available' });
+  }
   recipients.forEach((userId: string) => {
-    req.app.get('io').to(userId).emit('newNotification', {
+    io.to(userId).emit('newNotification', {
       type,
       message,
       data,

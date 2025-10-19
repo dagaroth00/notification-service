@@ -1,40 +1,46 @@
 import { PrismaClient } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Create a new notification
 export const create = async (data: any) => {
-  return prisma.notification.create({ data });
+  return prisma.notifications.create({ data });
 };
 
-export const getAll = async (query: any) => {
-  const { userId, type, isRead } = query;
-  return prisma.notification.findMany({
+// Get all notifications, optionally filtered by userId and read status
+export const getAll = async (query: { userId?: string; isRead?: string }) => {
+  const { userId, isRead } = query;
+  return prisma.notifications.findMany({
     where: {
       userId: userId || undefined,
-      type: type || undefined,
-      isRead: isRead ? isRead === "true" : undefined,
+      readAt: typeof isRead === 'string' ? (isRead === 'true' ? { not: null } : null) : undefined,
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: 'desc' },
   });
 };
 
+// Get a notification by ID
 export const getById = async (id: string) => {
-  return prisma.notification.findUnique({ where: { id } });
+  return prisma.notifications.findUnique({ where: { id } });
 };
 
+// Mark a notification as read (set readAt to now)
 export const markAsRead = async (id: string) => {
-  return prisma.notification.update({
+  return prisma.notifications.update({
     where: { id },
-    data: { isRead: true },
+    data: { readAt: new Date() },
   });
 };
 
+// Delete a notification
 export const remove = async (id: string) => {
-  return prisma.notification.delete({ where: { id } });
+  return prisma.notifications.delete({ where: { id } });
 };
 
+// Get unread notification count for a user
 export const getUnreadCount = async (userId: string) => {
-  return prisma.notification.count({
-    where: { userId, isRead: false },
+  return prisma.notifications.count({
+    where: { userId, readAt: null },
   });
 };

@@ -31,4 +31,5 @@ export default async function setupSocket(io: Server) {
       console.log(`User ${userId} disconnected`);
     });
   });
+  return io;
 }

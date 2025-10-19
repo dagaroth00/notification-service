@@ -9,6 +9,7 @@ import setupSocket from "./sockets/socket.server.js";
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.set('io', null);
 
 // REST APIs
 app.use("/api/notifications", notificationRoutes);
@@ -21,9 +22,12 @@ const io = new Server(server, {
 
 // Initialize socket events
 
-setupSocket(io);
+// setupSocket(io);
+setupSocket(io).then((io) => {
+  app.set('io', io);
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Notification service running on port ${PORT}`);
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, () => {
+    console.log(`Notification service running on port ${PORT}`);
+  });
 });

@@ -46,6 +46,21 @@ npm start
 - Ensure required environment variables are set in `.env` or your environment before starting.
 - If you use Docker or a process manager (PM2), adapt the `npm run build` + `npm start` flow for production.
 
+## Prisma
+This project uses Prisma for database access. Before running migrations or opening Prisma Studio, ensure your `DATABASE_URL` is set in the `.env` file at the project root.
+
+Run these commands from the project root when you need to initialise the database and generate the Prisma client:
+
+```bat
+npx prisma migrate dev --name init
+npx prisma generate
+npx prisma studio
+```
+
+- `migrate dev --name init` runs migrations and updates the database (creates migration files).
+- `generate` generates the Prisma client used by the app.
+- `studio` opens Prisma Studio (a web GUI) to inspect and edit data.
+
 ---
 
 If you'd like, I can add a sample `.env.example` and a short development note for using `ts-node-dev` for auto-restarts.
