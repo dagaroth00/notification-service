@@ -1,0 +1,139 @@
+import { PrismaClient, Notifications, EventLog } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+export class NotificationService {
+  /**
+   * Create a notification for a specific user using a template.
+   */
+  async createNotification(
+    userId: string,
+    templateName: string,
+    placeholders: Record<string, string> = {}
+  ): Promise<Notifications> {
+    const template = await prisma.notificationTemplate.findUnique({
+      where: { name: templateName },
+    });
+
+    if (!template) throw new Error(`Template "${templateName}" not found.`);
+
+    // Fetch user preferences
+    const preference = await prisma.userPreference.findFirst({
+      where: { userId, channel: template.channel },
+    });
+
+    if (preference && !preference.enabled) {
+      await this.logEvent(null, "skipped", `User disabled ${template.channel}`);
+      throw new Error(`User has disabled ${template.channel} notifications.`);
+    }
+
+    // Replace placeholders (e.g., {{username}})
+    const render = (text: string) =>
+      text.replace(/\{\{(.*?)\}\}/g, (_, key) => placeholders[key.trim()] || "");
+
+    const notification = await prisma.notifications.create({
+      data: {
+        userId,
+        templateId: template.id,
+        title: render(template.title),
+        body: render(template.body),
+        channel: template.channel,
+        status: "pending",
+        metadata: template.metadata,
+      },
+    });
+
+    await this.logEvent(notification.id, "created", "Notification created");
+
+    return notification;
+  }
+
+  /**
+   * Update the status of a notification (e.g., sent, delivered, read, failed)
+   */
+  async updateStatus(
+    notificationId: string,
+    status: string
+  ): Promise<Notifications> {
+    const validStatuses = ["pending", "sent", "delivered", "read", "failed"];
+    if (!validStatuses.includes(status)) {
+      throw new Error(`Invalid status: ${status}`);
+    }
+
+    const notification = await prisma.notifications.update({
+      where: { id: notificationId },
+      data: {
+        status,
+        sentAt: status === "sent" ? new Date() : undefined,
+        readAt: status === "read" ? new Date() : undefined,
+      },
+    });
+
+    await this.logEvent(notificationId, status, `Status changed to ${status}`);
+
+    return notification;
+  }
+
+  /**
+   * Get all notifications for a user (optionally filter by status)
+   */
+  async getUserNotifications(
+    userId: string,
+    status?: string
+  ): Promise<Notifications[]> {
+    return prisma.notifications.findMany({
+      where: {
+        userId,
+        ...(status ? { status } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  /**
+   * Mark a notification as read
+   */
+  async markAsRead(notificationId: string): Promise<Notifications> {
+    return this.updateStatus(notificationId, "read");
+  }
+
+  /**
+   * Log an event for tracking (created, sent, delivered, etc.)
+   */
+  private async logEvent(
+    notificationId: string | null,
+    eventType: string,
+    message?: string
+  ): Promise<EventLog> {
+    return prisma.eventLog.create({
+      data: {
+        notificationId: notificationId || "00000000-0000-0000-0000-000000000000",
+        eventType,
+        message,
+      },
+    });
+  }
+
+  /**
+   * Send notifications (stub for integration with push/email)
+   */
+  async sendNotification(notificationId: string): Promise<void> {
+    const notification = await prisma.notifications.findUnique({
+      where: { id: notificationId },
+      include: { user: true },
+    });
+
+    if (!notification) throw new Error("Notification not found.");
+
+    try {
+      // 🔌 Integrate with FCM / email / socket here
+      console.log(`Sending ${notification.channel} notification to ${notification.user.email}`);
+
+      await this.updateStatus(notification.id, "sent");
+    } catch (err) {
+      await this.updateStatus(notification.id, "failed");
+      await this.logEvent(notification.id, "failed", (err as Error).message);
+      throw err;
+    }
+  }
+}

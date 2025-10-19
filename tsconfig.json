@@ -1,0 +1,53 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
+    "types": ["node"],
+    "lib": ["ES2022"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+
+}
+//     // "noUnusedParameters": true,
+//     // "noFallthroughCasesInSwitch": true,
+//     // "noPropertyAccessFromIndexSignature": true,
+
+//     // Recommended Options
+//     "strict": true,
+//     "jsx": "react-jsx",
+//     "verbatimModuleSyntax": true,
+//     "isolatedModules": true,
+//     "noUncheckedSideEffectImports": true,
+//     "moduleDetection": "force",
+//     "skipLibCheck": true,
+//   }
+// }
+
+// {
+//   "compilerOptions": {
+//     "target": "ES2020",          // Ensure you're targeting ES modules
+//     "module": "ESNext",          // Use ESNext module system (ESM)
+//     "moduleResolution": "node",  // Node module resolution for imports
+//     "esModuleInterop": true,     // Allow default imports for CommonJS modules
+//     "skipLibCheck": true,
+//     "forceConsistentCasingInFileNames": true,
+//     "outDir": "./dist",
+//     "rootDir": "./src",
+//     "strict": true,
+//     "baseUrl": "./src",
+//     "paths": { "@/*": ["*"] }
+//   },
+//   "include": ["src/**/*"],
+//   "exclude": ["node_modules"],
+//   // "outDir": "./dist",
+
+// }
