@@ -44,3 +44,31 @@ export const getUnreadCount = async (userId: string) => {
     where: { userId, readAt: null },
   });
 };
+
+
+export const applyTemplate = (template: string, data: Record<string, any> = {}) => {
+  return template.replace(/{{(.*?)}}/g, (_, key) => {
+    const value = data[key.trim()];
+    return value !== undefined ? value : '';
+  });
+};
+
+export const getTemplateMessage = async (templateId: number, data: Record<string, any> = {}) => {
+  const template = await prisma.notificationTemplate.findUnique({
+    where: { id: templateId },
+  });
+
+  if (!template) {
+    throw new Error(`Notification template with ID ${templateId} not found`);
+  }
+
+  const title = applyTemplate(template.title, data);
+  const body = applyTemplate(template.body, data);
+
+  return {
+    title,
+    body,
+    channel: template.channel,
+    templateId: template.id,
+  };
+};

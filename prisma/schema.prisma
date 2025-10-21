@@ -13,72 +13,58 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id           String             @id @default(uuid())
-  email        String?            @unique
-  phone        String?
-  name         String?
-  createdAt    DateTime           @default(now())
-
-  // Relations
-  notifications Notifications[]
-  preferences   UserPreference[]
-  deviceTokens  DeviceToken[]
-}
-
+// Notification templates
 model NotificationTemplate {
-  id         Int                @id @default(autoincrement())
-  name       String             @unique
-  title      String
-  body       String
-  channel    String
-  metadata   Json?
-  createdAt  DateTime           @default(now())
+  id            Int              @id @default(autoincrement())
+  name          String           @unique
+  title         String
+  body          String
+  channel       String           // in_app, email, push, sms
+  metadata      Json?
+  createdAt     DateTime         @default(now())
 
   notifications Notifications[]
 }
 
+// Notifications
 model Notifications {
   id            String              @id @default(uuid())
-  userId        String
+  userId        String              // comes from Auth service
   templateId    Int?
   title         String
   body          String
   channel       String
-  status        String              @default("pending")
+  status        String              @default("pending") // pending, sent, delivered, read, failed
   priority      String              @default("normal")
   metadata      Json?
   createdAt     DateTime            @default(now())
   sentAt        DateTime?
   readAt        DateTime?
 
-  // Relations
-  user          User                @relation(fields: [userId], references: [id])
   template      NotificationTemplate? @relation(fields: [templateId], references: [id])
   eventLogs     EventLog[]
 }
 
+// User notification preferences
 model UserPreference {
   id         Int        @id @default(autoincrement())
-  userId     String
+  userId     String     // from Auth service
   channel    String
-  enabled    Boolean     @default(true)
-  createdAt  DateTime    @default(now())
-
-  user       User        @relation(fields: [userId], references: [id])
+  enabled    Boolean    @default(true)
+  createdAt  DateTime   @default(now())
 }
 
+// Device tokens (for FCM/APNs)
 model DeviceToken {
   id         Int        @id @default(autoincrement())
-  userId     String
-  token      String      @unique
+  userId     String     // from Auth service
+  token      String     @unique
   platform   String
-  isActive   Boolean     @default(true)
-  createdAt  DateTime    @default(now())
-
-  user       User        @relation(fields: [userId], references: [id])
+  isActive   Boolean    @default(true)
+  createdAt  DateTime   @default(now())
 }
 
+// Event logs (for auditing)
 model EventLog {
   id              Int             @id @default(autoincrement())
   notificationId  String
@@ -89,6 +75,7 @@ model EventLog {
   notification    Notifications   @relation(fields: [notificationId], references: [id])
 }
 
+// Channel configurations (global)
 model ChannelConfig {
   id         Int        @id @default(autoincrement())
   channel    String     @unique
