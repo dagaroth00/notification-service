@@ -20,8 +20,20 @@ const pinoMiddleware: RequestHandler = (pinoHttp as any)({
 
 // Add response-time measurement middleware wrapper
 const middleware: RequestHandler = (req, res, next) => {
+	// Control request-level logging via env: set REQUEST_LOG_ENABLED=false to disable
+	const enabled = process.env.REQUEST_LOG_ENABLED;
+	if (typeof enabled === 'string' && enabled.toLowerCase() === 'false') return next();
+
+	// Ensure clients receive the request id
+	const reqId = genReqId(req);
+	try {
+		if (!res.headersSent) res.setHeader('X-Request-Id', reqId);
+	} catch (e) {
+		// ignore
+	}
+
 	const start = process.hrtime();
-		res.once('finish', () => {
+	res.once('finish', () => {
 			const diff = process.hrtime(start);
 			const ms = Math.round((diff[0] * 1e9 + diff[1]) / 1e6);
 			// Avoid setting headers after they are sent to the client

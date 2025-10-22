@@ -64,3 +64,29 @@ npx prisma studio
 ---
 
 If you'd like, I can add a sample `.env.example` and a short development note for using `ts-node-dev` for auto-restarts.
+
+## Logging
+
+This project uses `pino` for structured logging. You can control log verbosity with the `LOG_LEVEL` environment variable. Supported levels: `fatal`, `error`, `warn`, `info`, `debug`, `trace`.
+
+Examples:
+
+- Run in development with debug logs (Windows cmd):
+
+```bat
+set LOG_LEVEL=debug && npm run dev
+```
+
+- Run production build with info logs:
+
+```bat
+set LOG_LEVEL=info && npm run build && npm start
+```
+
+- Run compiled app with pretty logs (development friendly):
+
+```bat
+set LOG_LEVEL=debug && npm run build && npm run start:dev
+```
+
+The `start:dev` script pipes the `node dist/app.js` output through `pino-pretty` for readable console logs. You can change `LOG_LEVEL` to reduce verbosity in staging/production (e.g., `warn` or `error`).
