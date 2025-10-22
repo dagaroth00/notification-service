@@ -15,8 +15,7 @@ export const createNotifications = async (req: Request, res: Response) => {
 			throw new BadRequestError('recipients must be a non-empty array');
 		}
 
-	try {
-		const results = await Promise.all(
+	const results = await Promise.all(
 			recipients.map(async (userId: string) => {
 				let finalTitle = title;
 				let finalBody = body;
@@ -42,72 +41,43 @@ export const createNotifications = async (req: Request, res: Response) => {
 					templateId: usedTemplateId,
 				});
 
-				io.to(userId).emit('newNotification', notification);
-				return notification;
-			})
-		);
+						io.to(userId).emit('newNotification', notification);
+						return notification;
+					})
+				);
 
-		return success(res, { notifications: results }, 'Notifications created');
-		} catch (err: unknown) {
-			logger.error('createNotifications failed', err);
-			return error(res, err);
-		}
+				return success(res, { notifications: results }, 'Notifications created');
 };
 
 // GET /notifications
 export const getAllNotifications = async (req: Request, res: Response) => {
-	try {
-		const notifications = await notificationService.getAll(req.query as any);
-		return success(res, notifications);
-		} catch (err: unknown) {
-			logger.error('getAllNotifications failed', err);
-			return error(res, err);
-		}
+	const notifications = await notificationService.getAll(req.query as any);
+	return success(res, notifications);
 };
 
 // GET /notifications/:id
 export const getNotificationById = async (req: Request, res: Response) => {
-		try {
-			const notification = await notificationService.getById(req.params.id);
-			if (!notification) throw new NotFoundError('Notification not found');
-			return success(res, notification);
-		} catch (err: unknown) {
-			logger.error('getNotificationById failed', err);
-			return error(res, err);
-		}
+	const notification = await notificationService.getById(req.params.id);
+	if (!notification) throw new NotFoundError('Notification not found');
+	return success(res, notification);
 };
 
 // PATCH /notifications/:id/read
 export const markNotificationAsRead = async (req: Request, res: Response) => {
-	try {
-		const notification = await notificationService.markAsRead(req.params.id);
-		return success(res, notification, 'Notification marked as read');
-		} catch (err: unknown) {
-			logger.error('markNotificationAsRead failed', err);
-			return error(res, err);
-		}
+	const notification = await notificationService.markAsRead(req.params.id);
+	return success(res, notification, 'Notification marked as read');
 };
 
 // DELETE /notifications/:id
 export const deleteNotification = async (req: Request, res: Response) => {
-	try {
-		await notificationService.remove(req.params.id);
-		return success(res, null, 'Notification deleted');
-		} catch (err: unknown) {
-			logger.error('deleteNotification failed', err);
-			return error(res, err);
-		}
+	await notificationService.remove(req.params.id);
+	return success(res, null, 'Notification deleted');
 };
 
 // GET /notifications/unread/count?userId=...
 export const getUnreadCount = async (req: Request, res: Response) => {
 		const { userId } = req.query;
 		if (!userId || typeof userId !== 'string') throw new BadRequestError('Missing userId');
-		try {
-			const count = await notificationService.getUnreadCount(userId);
-			return success(res, { userId, unreadCount: count });
-		} catch (err: unknown) {
-			logger.error('getUnreadCount failed', err);
-			return error(res, err);
-		}
+	const count = await notificationService.getUnreadCount(userId);
+	return success(res, { userId, unreadCount: count });
 };

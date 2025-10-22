@@ -5,14 +5,22 @@ import { Server } from "socket.io";
 import cors from "cors";
 import notificationRoutes from "./routes/notification.routes.js";
 import setupSocket from "./sockets/socket.server.js";
+import errorHandler from './middlewares/errorHandler.js';
+import requestLogger from './middlewares/requestLogger.js';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.set('io', null);
 
+// Request logging
+app.use(requestLogger);
+
 // REST APIs
 app.use("/api/notifications", notificationRoutes);
+
+// Error handler (should be after routes)
+app.use(errorHandler);
 
 // HTTP + Socket.IO
 const server = http.createServer(app);

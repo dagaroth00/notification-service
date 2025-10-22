@@ -1,4 +1,6 @@
 import * as repository from '../repositories/notification.repository.js';
+import logger from '../utils/logger.js';
+import { NotFoundError, ServiceError } from '../errors/httpError.js';
 
 // Create a new notification
 export const create = async (data: any) => {
@@ -42,7 +44,8 @@ export const getTemplateMessage = async (templateId: number, data: Record<string
   const template = await repository.findTemplateById(templateId);
 
   if (!template) {
-    throw new Error(`Notification template with ID ${templateId} not found`);
+    logger.warn(`Template ${templateId} not found`);
+    throw new NotFoundError(`Notification template with ID ${templateId} not found`);
   }
 
   const title = applyTemplate(template.title, data);
