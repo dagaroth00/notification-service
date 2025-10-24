@@ -20,7 +20,7 @@ export default async function setupSocket(io: Server) {
 
   io.adapter(createAdapter(pubClient, subClient));
 
-  // io.use(verifyJWT); // JWT middleware for WebSocket
+  io.use(verifyJWT); // JWT middleware for WebSocket
   io.on('connection', (socket: Socket) => {
     const userId: string = ((socket.data.user as User | undefined)?.sub) ?? socket.id;
     console.log(`User ${userId} connected`);

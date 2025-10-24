@@ -1,24 +1,25 @@
 import { Router } from 'express';
 import * as notificationController from '../controllers/notification.controller.js';
+import { requireAuth } from '../middlewares/cognitoAuth.js';
 
 const router = Router();
 
-// POST /notifications - create and send notification
-router.post('/', notificationController.createNotifications);
+// POST /notifications - create and send notification (requires authenticated user)
+router.post('/', requireAuth({ required: true }), notificationController.createNotifications);
 
-// GET /notifications?userId=...&isRead=...
-router.get('/', notificationController.getAllNotifications);
+// GET /notifications?userId=...&isRead=... (optional auth - useful for public fetching with query token)
+router.get('/', requireAuth({ required: false }), notificationController.getAllNotifications);
 
-// GET /notifications/:id
-router.get('/:id', notificationController.getNotificationById);
+// GET /notifications/:id (requires auth)
+router.get('/:id', requireAuth({ required: true }), notificationController.getNotificationById);
 
-// PATCH /notifications/:id/read
-router.patch('/:id/read', notificationController.markNotificationAsRead);
+// PATCH /notifications/:id/read (requires auth)
+router.patch('/:id/read', requireAuth({ required: true }), notificationController.markNotificationAsRead);
 
-// DELETE /notifications/:id
-router.delete('/:id', notificationController.deleteNotification);
+// DELETE /notifications/:id (requires auth and admin role)
+router.delete('/:id', requireAuth({ required: true, roles: ['admin'] }), notificationController.deleteNotification);
 
-// GET /notifications/unread/count?userId=...
-router.get('/unread/count', notificationController.getUnreadCount);
+// GET /notifications/unread/count?userId=... (requires auth)
+router.get('/unread/count', requireAuth({ required: true }), notificationController.getUnreadCount);
 
 export default router;

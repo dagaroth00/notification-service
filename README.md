@@ -90,3 +90,67 @@ set LOG_LEVEL=debug && npm run build && npm run start:dev
 ```
 
 The `start:dev` script pipes the `node dist/app.js` output through `pino-pretty` for readable console logs. You can change `LOG_LEVEL` to reduce verbosity in staging/production (e.g., `warn` or `error`).
+
+## Auth & WebSocket (AWS Cognito)
+
+This project supports AWS Cognito JWT verification for both REST and WebSocket endpoints. The Express routes use a middleware factory `requireAuth({ required, roles })` for per-route control. The Socket.IO server verifies tokens during handshake and populates `socket.data.user`.
+
+Required environment variables for Cognito integration:
+
+- `AWS_REGION` — AWS region of your Cognito User Pool (e.g. us-east-1)
+- `COGNITO_USER_POOL_ID` — your User Pool id
+- `COGNITO_APP_CLIENT_ID` — Cognito App Client id used as JWT audience
+
+Example: add to `.env` (do NOT commit secrets)
+
+```bat
+set AWS_REGION=us-east-1
+set COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX
+set COGNITO_APP_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+REST example (create notification, includes Authorization header):
+
+```bat
+curl -X POST https://your-api.example.com/api/notifications \
+  -H "Authorization: Bearer <ID_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d "{ \"recipients\": [\"user-1\"], \"title\": \"Hi\", \"body\": \"Hello\" }"
+```
+
+Socket.IO client example (handshake token):
+
+```js
+// browser or node socket.io-client
+import { io } from 'socket.io-client';
+
+const socket = io('https://your-socket.example.com', {
+  auth: {
+    token: '<ID_TOKEN>'
+  }
+});
+
+socket.on('connect', () => console.log('connected', socket.id));
+socket.on('newNotification', (n) => console.log('notif', n));
+
+// Or send token in Authorization header during websocket handshake
+// headers: { Authorization: `Bearer ${token}` }
+```
+
+Per-route control
+- Use `requireAuth({ required: true })` to require authentication
+- Use `requireAuth({ required: false })` to allow anonymous access (but accept token if provided)
+- Use `requireAuth({ required: true, roles: ['admin'] })` to require membership in Cognito group `admin` (based on `cognito:groups` claim)
+
+Notes about tests
+- I added a small Jest test for the middleware under `testing/__tests__/cognitoAuth.test.ts` and added Jest + ts-jest dev-dependencies. Because this repository uses ESM (package.json "type": "module") Jest needs special ESM handling. If you run into issues running tests locally, see the troubleshooting section below.
+
+Troubleshooting Jest + ESM
+- If you get "Cannot use import statement outside a module" errors, ensure you have installed `ts-jest` and used the ESM preset. Running the tests locally (Windows cmd) should work with:
+
+```bat
+npm install
+npm test
+```
+
+If the jest run still errors due to ESM/ts-jest config, an alternative is to temporarily set `type: "commonjs"` in `package.json` while running tests, or to move tests into a compiled `dist/` folder and run against that compiled code.
