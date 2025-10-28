@@ -1,6 +1,7 @@
 import * as repository from '../repositories/notification.repository.js';
 import logger from '../utils/logger.js';
 import { NotFoundError, ServiceError } from '../errors/httpError.js';
+import { NotificationChannel, getNotificationTemplateDefinition } from '../constants/notification-templates.js';
 
 // Create a new notification
 export const create = async (data: any) => {
@@ -46,6 +47,20 @@ export const getTemplateMessage = async (templateId: number, data: Record<string
   if (!template) {
     logger.warn(`Template ${templateId} not found`);
     throw new NotFoundError(`Notification template with ID ${templateId} not found`);
+  }
+
+  const definition = getNotificationTemplateDefinition(templateId);
+  if (!definition) {
+    logger.warn({ templateId }, 'Template id is not present in NotificationTemplate enum');
+  } else if (template.channel && !definition.channels.includes(template.channel as NotificationChannel)) {
+    logger.warn(
+      {
+        templateId,
+        dbChannel: template.channel,
+        enumChannels: definition.channels,
+      },
+      'Template channel differs from enum definition',
+    );
   }
 
   const title = applyTemplate(template.title, data);

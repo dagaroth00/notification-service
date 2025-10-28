@@ -23,7 +23,27 @@ export function requireAuth(options: VerifyOptions = { required: true }) {
     console.log('[cognitoAuth] requireAuth options:', options);
   return async function (req: Request, res: Response, next: NextFunction) {
     const authHeader = req.headers.authorization;
-    const token = authHeader?.split(' ')[1] || req.query.token || req.headers['x-access-token'];
+    const headerToken = authHeader?.split(' ')[1];
+    const queryToken = typeof req.query.token === 'string' ? req.query.token : undefined;
+    const altHeaderTokenRaw = req.headers['x-access-token'];
+    const altHeaderToken = Array.isArray(altHeaderTokenRaw)
+      ? altHeaderTokenRaw[0]
+      : typeof altHeaderTokenRaw === 'string'
+      ? altHeaderTokenRaw
+      : undefined;
+
+    const token = headerToken || queryToken || altHeaderToken;
+
+    const internalSecret = process.env.INTERNAL_SERVICE_SECRET;
+    const isInternalRequest =
+      typeof token === 'string' && internalSecret && token === internalSecret;
+
+    if (isInternalRequest) {
+      // Flag request as internal for downstream consumers and skip Cognito verification
+      req.user = { internal: true, source: 'internal-service' };
+      console.log('[cognitoAuth] Internal service token accepted, skipping Cognito verification');
+      return next();
+    }
 
     if (!token) {
       if (options.required === false) return next();
@@ -35,7 +55,7 @@ export function requireAuth(options: VerifyOptions = { required: true }) {
       const decoded = await verifyToken(token as string);
       // attach user
       req.user = decoded;
-
+      console.log('[cognitoAuth] Step 2: Token verified, user attached to req' + JSON.stringify(req.user));
       // role check: Cognito groups are usually in 'cognito:groups' claim
       if (options.roles && options.roles.length > 0) {
         const groups: string[] = (decoded as any)['cognito:groups'] || [];
