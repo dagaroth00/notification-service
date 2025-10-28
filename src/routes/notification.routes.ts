@@ -10,6 +10,9 @@ router.post('/', requireAuth({ required: true }), notificationController.createN
 // GET /notifications?userId=...&isRead=... (optional auth - useful for public fetching with query token)
 router.get('/', requireAuth({ required: false }), notificationController.getAllNotifications);
 
+// GET /notifications/users/:userId/guid (requires auth)
+router.get('/users/:userId/guid', requireAuth({ required: true }), notificationController.getUserGuid);
+
 // GET /notifications/:id (requires auth)
 router.get('/:id', requireAuth({ required: true }), notificationController.getNotificationById);
 

@@ -3,6 +3,7 @@ import * as notificationService from '../services/notification.service.js';
 import { success, error } from '../utils/response.js';
 import logger from '../utils/logger.js';
 import { BadRequestError, NotFoundError } from '../errors/httpError.js';
+import { getUserGuidByUserId } from '../services/auth.service.js';
 
 // POST /notifications
 export const createNotifications = async (req: Request, res: Response) => {
@@ -107,4 +108,11 @@ export const getUnreadCount = async (req: Request, res: Response) => {
 		if (!userId || typeof userId !== 'string') throw new BadRequestError('Missing userId');
 	const count = await notificationService.getUnreadCount(userId);
 	return success(res, { userId, unreadCount: count });
+};
+
+// GET /notifications/users/:userId/guid
+export const getUserGuid = async (req: Request, res: Response) => {
+		const { userId } = req.params;
+	const result = await getUserGuidByUserId(userId);
+	return success(res, result, 'User GUID resolved');
 };

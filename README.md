@@ -8,6 +8,7 @@ Simple notification microservice (TypeScript + Express + Socket.IO).
   - PORT
   - REDIS_URL
   - JWT_ISSUER / JWKS settings (if using auth middleware)
+  - AUTH_SERVICE_TIMEOUT_MS (optional timeout override for auth service calls)
 
 ## Install
 Open a command prompt in the project root and run:
@@ -45,6 +46,7 @@ npm start
 - Check `package.json` scripts if you need custom start commands.
 - Ensure required environment variables are set in `.env` or your environment before starting.
 - If you use Docker or a process manager (PM2), adapt the `npm run build` + `npm start` flow for production.
+- Service base URLs (with trailing slashes) and endpoint templates live in `src/constants/serviceApiPaths.ts`; update that file to point at your environments.
 
 ## Prisma
 This project uses Prisma for database access. Before running migrations or opening Prisma Studio, ensure your `DATABASE_URL` is set in the `.env` file at the project root.
