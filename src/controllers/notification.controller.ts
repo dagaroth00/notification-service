@@ -15,6 +15,15 @@ export const createNotifications = async (req: Request, res: Response) => {
 			throw new BadRequestError('recipients must be a non-empty array');
 		}
 
+		const uniqueRecipients = Array.from(new Set(recipients));
+		const recipientGuidPairs = await Promise.all(
+			uniqueRecipients.map(async (userId: string) => {
+				const { userGuid } = await getUserGuidByUserId(userId);
+				return { userId, userGuid };
+			})
+		);
+		const recipientGuidMap = new Map(recipientGuidPairs.map(({ userId, userGuid }) => [userId, userGuid]));
+
 		// Example permission check: only authenticated users can create notifications.
 		// req.user is populated by the auth middleware (Cognito token). If you want to
 		// allow service-to-service calls you can use another mechanism (API key, etc.).
@@ -49,7 +58,8 @@ export const createNotifications = async (req: Request, res: Response) => {
 					templateId: usedTemplateId,
 				});
 
-				io.to(userId).emit('newNotification', notification);
+				const userGuid = recipientGuidMap.get(userId) ?? userId;
+				io.to(userGuid).emit('newNotification', notification);
 				return notification;
 			})
 		);
