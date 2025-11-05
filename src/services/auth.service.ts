@@ -13,9 +13,9 @@ export interface UserGuidLookupResult {
   [key: string]: unknown;
 }
 
-const AUTH_GET_USER_DETAILS_PATH = 'User/GetUserDetails?id=';
 const AUTH_USER_GUID_FIELD = 'cognitoUserId';
 // const AUTH_USER_GUID_FIELD = 'email';
+const AUTH_GET_USER_DETAILS_PATH = 'User/GetUser?id=';
 const AUTH_USER_ID_FIELD = 'userId';
 
 const AUTH_SERVICE_DESCRIPTOR: ExternalServiceDescriptor = {

@@ -38,6 +38,7 @@ export const createNotifications = async (req: Request, res: Response) => {
 				let finalBody = body;
 				let finalChannel = channel;
 				let usedTemplateId: number | null = null;
+				const userGuid = recipientGuidMap.get(userId) ?? userId;
 
 				if (templateId) {
 					const templateMessage = await notificationService.getTemplateMessage(templateId, data);
@@ -48,7 +49,7 @@ export const createNotifications = async (req: Request, res: Response) => {
 				}
 
 				const notification = await notificationService.create({
-					userId,
+					userId: userGuid,
 					title: finalTitle,
 					body: finalBody,
 					channel: finalChannel,
@@ -58,7 +59,6 @@ export const createNotifications = async (req: Request, res: Response) => {
 					templateId: usedTemplateId,
 				});
 
-				const userGuid = recipientGuidMap.get(userId) ?? userId;
 				io.to(userGuid).emit('newNotification', notification);
 				return notification;
 			})
@@ -78,13 +78,14 @@ export const getNotificationById = async (req: Request, res: Response) => {
 		const notification = await notificationService.getById(req.params.id);
 		if (!notification) throw new NotFoundError('Notification not found');
 
-		// Permission example: allow if the requester is the owner (sub) or is in admin group
-		const user = req.user as any;
-		const isAdmin = (user && (user['cognito:groups'] || []).includes('admin')) || false;
-		const isOwner = user && user.sub && notification.userId === user.sub;
-		if (!isAdmin && !isOwner) {
-			throw new BadRequestError('Forbidden: insufficient permissions');
-		}
+		//TOO: uncomment this block to enable permission check
+		// allow if the requester is the owner (sub) or is in admin group
+		// const user = req.user as any;
+		// const isAdmin = (user && (user['cognito:groups'] || []).includes('admin')) || false;
+		// const isOwner = user && user.sub && notification.userId === user.sub;
+		// if (!isAdmin && !isOwner) {
+		// 	throw new BadRequestError('Forbidden: insufficient permissions');
+		// }
 
 		return success(res, notification);
 };
@@ -96,11 +97,12 @@ export const markNotificationAsRead = async (req: Request, res: Response) => {
 		const notification = await notificationService.getById(req.params.id);
 		if (!notification) throw new NotFoundError('Notification not found');
 
-		const isAdmin = (user && (user['cognito:groups'] || []).includes('admin')) || false;
-		const isOwner = user && user.sub && notification.userId === user.sub;
-		if (!isAdmin && !isOwner) {
-			throw new BadRequestError('Forbidden: insufficient permissions');
-		}
+		//TOO: uncomment this block to enable permission check
+		// const isAdmin = (user && (user['cognito:groups'] || []).includes('admin')) || false;
+		// const isOwner = user && user.sub && notification.userId === user.sub;
+		// if (!isAdmin && !isOwner) {
+		// 	throw new BadRequestError('Forbidden: insufficient permissions');
+		// }
 
 		const updated = await notificationService.markAsRead(req.params.id);
 		return success(res, updated, 'Notification marked as read');

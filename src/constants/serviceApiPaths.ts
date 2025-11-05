@@ -1,3 +1,10 @@
+// for dev
+// export const SERVICE_BASE_URLS = {
+//   auth: 'https://demo-webapi.colobbo.com/api/',
+//   notification: 'http://localhost:7000/api/notifications/',
+//   user: 'http://localhost:4001/api/users/',
+// } as const;
+
 // Include trailing slashes so relative endpoint paths concatenate correctly.
 export const SERVICE_BASE_URLS = {
   auth: 'http://localhost:57111/api/',
@@ -17,7 +24,7 @@ export const resolveServiceBaseUrl = (service: ServiceKey): string => {
 
 export const SERVICE_ENDPOINTS = {
   auth: {
-    getUserDetailsByUserId: 'User/GetUserDetails?id=:userId',
+    getUserDetailsByUserId: 'User/GetUser?id=:userId',
   },
   notification: {},
   user: {},

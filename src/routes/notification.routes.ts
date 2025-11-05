@@ -8,7 +8,7 @@ const router = Router();
 router.post('/', requireAuth({ required: true }), notificationController.createNotifications);
 
 // GET /notifications?userId=...&isRead=... (optional auth - useful for public fetching with query token)
-router.get('/', requireAuth({ required: false }), notificationController.getAllNotifications);
+router.get('/', requireAuth({ required: true }), notificationController.getAllNotifications);
 
 // GET /notifications/users/:userId/guid (requires auth)
 router.get('/users/:userId/guid', requireAuth({ required: true }), notificationController.getUserGuid);
